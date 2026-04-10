@@ -27,6 +27,11 @@ function ShoeList({ inventory, onAddClick, onShoeClick }) {
             <option value="M6/W8">M6/W8</option>
             <option value="M7/W9">M7/W9</option>
             <option value="M8/W10">M8/W10</option>
+            <option value="M9/W11">M9/W11</option>
+            <option value="M10/W12">M10/W12</option>
+            <option value="M11">M11</option>
+            <option value="M12">M12</option>
+            <option value="M13">M13</option>
           </select>
         </div>
 
