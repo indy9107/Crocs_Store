@@ -1,0 +1,35 @@
+/* App.css */
+.grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+/* เพิ่มบรรทัดนี้ใน .card ปกติของคุณ */
+.card {
+  transition: all 0.3s ease-in-out; /* ทำให้การ์ดโดยรวมขยับนุ่มนวล */
+}
+
+/* ตั้งค่า transition ให้รูปภาพด้วย */
+.card img {
+  transition: transform 0.4s ease;
+}
+
+.card:hover img {
+  transform: scale(1.15);
+}
+
+.card:hover {
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+/* เพิ่มส่วนนี้เผื่อเปิดดูในมือถือหรือแท็บเล็ต ให้รูปเรียงแบบ 2 ช่อง หรือ 1 ช่อง */
+@media (max-width: 1024px) {
+  .grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 600px) {
+  .grid-4 {
+    grid-template-columns: 1fr;
+  }
+}
