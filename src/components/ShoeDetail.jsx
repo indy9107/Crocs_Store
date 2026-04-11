@@ -1,34 +1,33 @@
 import React from "react";
 
 function ShoeDetail({ shoe, onBack, onDelete }) {
+  console.log("ข้อมูลที่ส่งมาหน้า Detail:", shoe);
+
   if (!shoe) return <p>ไม่พบข้อมูลรองเท้า</p>;
 
-  // --- ฟังก์ชันสำหรับกดแชร์ ---
-  // --- ฟังก์ชันสำหรับกดแชร์ (เฉพาะรูปลงรายละเอียด) ---
   const handleShare = async () => {
-    // เช็คก่อนว่ามีรูปลงรายละเอียดไหม
-    if (!shoe.detailImages || shoe.detailImages.length === 0) {
+    // แก้จุดที่ 1: เปลี่ยน detailImages เป็น detail_images
+    if (!shoe.detail_images || shoe.detail_images.length === 0) {
       alert("ไม่มีรูปรายละเอียดสำหรับแชร์ครับ");
       return;
     }
 
     try {
-      // 1. วนลูปแปลง Base64 ทุกรูปใน detailImages ให้กลายเป็น File
-      const filePromises = shoe.detailImages.map(async (base64Img, index) => {
-        const response = await fetch(base64Img);
+      // แก้จุดที่ 2: เปลี่ยน detailImages เป็น detail_images
+      // (และเปลี่ยนชื่อตัวแปรรับค่าจาก base64 เป็น imgUrl ให้ตรงกับความจริง)
+      const filePromises = shoe.detail_images.map(async (imgUrl, index) => {
+        const response = await fetch(imgUrl);
         const blob = await response.blob();
         return new File([blob], `${shoe.model}-detail-${index + 1}.jpg`, {
           type: "image/jpeg",
         });
       });
 
-      // รอให้แปลงไฟล์เสร็จครบทุกรูป
       const filesToShare = await Promise.all(filePromises);
 
-      // 2. ตรวจสอบว่าเครื่องรองรับการแชร์ไฟล์ชุดนี้ไหม
       if (navigator.canShare && navigator.canShare({ files: filesToShare })) {
         await navigator.share({
-          files: filesToShare, // ส่งไปแค่รูปล้วนๆ
+          files: filesToShare,
         });
       } else {
         alert(
@@ -36,7 +35,6 @@ function ShoeDetail({ shoe, onBack, onDelete }) {
         );
       }
     } catch (error) {
-      // ดักจับ Error กรณีผู้ใช้กดกากบาทปิดหน้าต่างแชร์
       if (error.name !== "AbortError") {
         alert("เกิดข้อผิดพลาดในการแชร์รูปภาพ");
         console.error(error);
@@ -60,16 +58,17 @@ function ShoeDetail({ shoe, onBack, onDelete }) {
               <b>ไซส์:</b> {shoe.size} | <b>สี:</b> {shoe.color}
             </p>
             <p>
-              <b>ราคา:</b> ฿{shoe.price} | <b>วันที่ลงสต๊อก:</b> {shoe.date}
+              {/* Note: ถ้าวันที่ไม่ขึ้น ให้แก้จาก shoe.date เป็น shoe.created_at แทนนะครับ */}
+              <b>ราคา:</b> ฿{shoe.price} | <b>วันที่ลงสต๊อก:</b>{" "}
+              {shoe.date || shoe.created_at}
             </p>
           </div>
 
           <div style={{ display: "flex", gap: "10px" }}>
-            {/* ปุ่มแชร์ใหม่ */}
             <button
               className="btn-primary"
               onClick={handleShare}
-              style={{ backgroundColor: "#3498DB" }} // สีฟ้า Messenger
+              style={{ backgroundColor: "#3498DB" }}
             >
               📤 แชร์ข้อมูลให้ลูกค้า
             </button>
@@ -82,19 +81,21 @@ function ShoeDetail({ shoe, onBack, onDelete }) {
 
         <h3>รูปภาพรายละเอียด:</h3>
         <div className="grid-4">
-          {shoe.detailImages.map((img, index) => (
-            <img
-              key={index}
-              src={img}
-              alt={`detail-${index}`}
-              style={{
-                width: "100%",
-                borderRadius: "8px",
-                objectFit: "cover",
-                height: "300px",
-              }}
-            />
-          ))}
+          {/* แก้จุดที่ 3: เปลี่ยน detailImages เป็น detail_images (และเพิ่มการเช็คว่ามีข้อมูลก่อนแมป) */}
+          {shoe.detail_images &&
+            shoe.detail_images.map((img, index) => (
+              <img
+                key={index}
+                src={img}
+                alt={`detail-${index}`}
+                style={{
+                  width: "100%",
+                  borderRadius: "8px",
+                  objectFit: "cover",
+                  height: "300px",
+                }}
+              />
+            ))}
         </div>
       </div>
     </div>

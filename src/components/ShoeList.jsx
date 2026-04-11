@@ -1,13 +1,35 @@
-import React, { useState } from "react";
-import ShoeCard from "./ShoeCard"; // 1. Import คอมโพเนนต์ที่เพิ่งสร้างมา
+import React, { useState, useEffect } from "react";
+import { supabase } from "../supabaseClient"; // 1. Import supabase
+import ShoeCard from "./ShoeCard";
 
-function ShoeList({ inventory, onAddClick, onShoeClick }) {
+function ShoeList({ onAddClick, onShoeClick }) {
+  // สังเกตว่าผมเอา prop 'inventory' ออกไปแล้ว เพราะเราจะดึงจาก Cloud แทน
   const [filterSize, setFilterSize] = useState("all");
+  const [shoes, setShoes] = useState([]); // 2. สร้าง state สำหรับเก็บข้อมูลรองเท้า
 
+  // 3. ใช้ useEffect เพื่อเรียก fetchShoes ทันทีที่เปิดหน้านี้ขึ้นมา
+  useEffect(() => {
+    fetchShoes();
+  }, []);
+
+  const fetchShoes = async () => {
+    const { data, error } = await supabase
+      .from("shoes")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("เกิดข้อผิดพลาดในการดึงข้อมูล:", error.message);
+    } else if (data) {
+      setShoes(data); // เก็บข้อมูลลง state
+    }
+  };
+
+  // 4. เปลี่ยนมาฟิลเตอร์จาก state 'shoes' แทน 'inventory' ตัวเก่า
   const filteredInventory =
     filterSize === "all"
-      ? inventory
-      : inventory.filter((shoe) => shoe.size === filterSize);
+      ? shoes
+      : shoes.filter((shoe) => shoe.size === filterSize);
 
   return (
     <div id="list-view">
@@ -42,7 +64,6 @@ function ShoeList({ inventory, onAddClick, onShoeClick }) {
 
       <div className="grid-4" style={{ marginTop: "64px" }}>
         {filteredInventory.map((shoe) => (
-          // 2. เรียกใช้ ShoeCard แทนก้อน div เดิม
           <ShoeCard key={shoe.id} shoe={shoe} onClick={onShoeClick} />
         ))}
 

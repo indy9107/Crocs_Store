@@ -1,64 +1,78 @@
 import React, { useState, useEffect } from "react";
-import localforage from "localforage"; // 1. Import localforage เข้ามา
+// 1. ลบ localforage ทิ้ง แล้วเรียกใช้ Supabase แทน
+import { supabase } from "./supabaseClient";
 import ShoeList from "./components/ShoeList";
 import AddShoe from "./components/AddShoe";
 import ShoeDetail from "./components/ShoeDetail";
-import ShoeCard from "./components/ShoeCard";
+import ShoeCard from "./components/ShoeCard"; // ถ้าในหน้านี้ไม่ได้ใช้ ShoeCard ลบทิ้งได้นะครับ
 import "./App.css";
 
 function App() {
   const [inventory, setInventory] = useState([]);
   const [view, setView] = useState("list");
   const [selectedId, setSelectedId] = useState(null);
-
-  // 2. สร้าง State เพื่อเช็คว่าโหลดข้อมูลเสร็จหรือยัง (กันข้อมูลเก่าหาย)
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // 3. เปลี่ยนจาก localStorage เป็น localforage.getItem
-  useEffect(() => {
-    // localforage จะทำงานแบบ Asynchronous (ใช้เวลาหาข้อมูลแป๊บนึง)
-    localforage
-      .getItem("crocsStockReact")
-      .then((savedData) => {
-        if (savedData) {
-          setInventory(savedData);
-        }
-        setIsLoaded(true); // โหลดเสร็จแล้วค่อยบอกให้ระบบรู้
-      })
-      .catch((err) => console.log("เกิดข้อผิดพลาดในการโหลด:", err));
-  }, []);
+  // 2. ฟังก์ชันสำหรับดึงข้อมูลจาก Supabase
+  const fetchShoes = async () => {
+    setIsLoaded(false); // เริ่มโหลด
+    try {
+      // ดึงข้อมูลทั้งหมดจากตาราง shoes และเรียงจากล่าสุดขึ้นก่อน
+      const { data, error } = await supabase
+        .from("shoes")
+        .select("*")
+        .order("created_at", { ascending: false });
 
-  // 4. เปลี่ยนจาก localStorage เป็น localforage.setItem
-  useEffect(() => {
-    // ต้องรอให้โหลดข้อมูลตอนแรกเสร็จก่อน ค่อยอนุญาตให้เซฟทับได้
-    if (isLoaded) {
-      localforage.setItem("crocsStockReact", inventory).catch((err) => {
-        console.log("เกิดข้อผิดพลาดในการเซฟ:", err);
-      });
+      if (error) throw error;
+      if (data) {
+        setInventory(data);
+      }
+    } catch (error) {
+      console.error("เกิดข้อผิดพลาดในการโหลดข้อมูลจาก Supabase:", error);
+    } finally {
+      setIsLoaded(true); // โหลดเสร็จแล้ว
     }
-  }, [inventory, isLoaded]);
+  };
 
-  const handleSaveShoe = (newShoe) => {
-    setInventory([...inventory, newShoe]);
+  // 3. สั่งให้ดึงข้อมูลใหม่ทุกครั้งที่เปิดเว็บ หรือสลับหน้าจอ (เช่น กลับมาจากหน้า Add)
+  useEffect(() => {
+    fetchShoes();
+  }, [view]);
+
+  // 4. หน้า AddShoe จัดการเซฟลง Supabase เองแล้ว หน้านี้แค่สั่งเปลี่ยนหน้าก็พอ
+  const handleSaveShoe = () => {
     setView("list");
   };
 
-  const handleDeleteShoe = (id) => {
+  // 5. อัปเกรดฟังก์ชันลบ ให้ไปลบใน Supabase ด้วย
+  const handleDeleteShoe = async (id) => {
     if (
       window.confirm("ยืนยันว่ารองเท้าคู่นี้ขายแล้ว และต้องการลบออกจากสต๊อก?")
     ) {
-      setInventory(inventory.filter((shoe) => shoe.id !== id));
-      setView("list");
+      try {
+        const { error } = await supabase.from("shoes").delete().eq("id", id); // ลบแถวที่ id ตรงกัน
+
+        if (error) throw error;
+
+        // ถ้าลบในฐานข้อมูลสำเร็จ ค่อยเอาออกจากหน้าจอ
+        setInventory(inventory.filter((shoe) => shoe.id !== id));
+        setView("list");
+      } catch (error) {
+        console.error("ลบข้อมูลไม่สำเร็จ:", error);
+        alert("เกิดข้อผิดพลาดในการลบข้อมูลครับ");
+      }
     }
   };
 
-  const selectedShoe = inventory.find((shoe) => shoe.id === selectedId);
+  // ✨ ท่าไม้ตายกันพลาด: แปลง ID เป็น String ก่อนเทียบ (กันปัญหา String ไม่เท่ากับ Number)
+  const selectedShoe = inventory.find(
+    (shoe) => String(shoe.id) === String(selectedId),
+  );
 
-  // ถ้ายังโหลดข้อมูลไม่เสร็จ ให้ขึ้นข้อความรอก่อน
-  if (!isLoaded) {
+  if (!isLoaded && inventory.length === 0) {
     return (
       <div style={{ textAlign: "center", marginTop: "50px" }}>
-        กำลังโหลดสต๊อกสินค้า...
+        กำลังเชื่อมต่อกับโกดังสินค้า (Supabase)... ⏳
       </div>
     );
   }

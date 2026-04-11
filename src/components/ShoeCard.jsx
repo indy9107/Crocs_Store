@@ -6,7 +6,7 @@ import React from "react";
 function ShoeCard({ shoe, onClick }) {
   return (
     <div className="card" onClick={() => onClick(shoe.id)}>
-      <img style={{ width: "200px" }} src={shoe.coverImage} alt={shoe.model} />
+      <img style={{ width: "200px" }} src={shoe.image_url} alt={shoe.model} />
       <div className="card-info">
         <h3>{shoe.model}</h3>
         <p>

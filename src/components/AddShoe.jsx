@@ -1,135 +1,201 @@
-import React from "react";
+import { useState } from "react";
+import { supabase } from "../supabaseClient";
 
-// รับ props 2 ตัวจาก App.jsx:
-// 1. onBack = ฟังก์ชันสำหรับกดย้อนกลับไปหน้ารายการ
-// 2. onSave = ฟังก์ชันสำหรับส่งข้อมูลรองเท้าคู่ใหม่กลับไปให้ App.jsx บันทึก
-function AddShoe({ onBack, onSave }) {
-  // ฟังก์ชันแปลงไฟล์รูปเป็น Base64 (ย้ายมาไว้ที่นี่)
-  const fileToBase64 = (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = (error) => reject(error);
-    });
-  };
+function AddShoe() {
+  const [model, setModel] = useState("");
+  const [price, setPrice] = useState("");
+  const [size, setSize] = useState("");
+  const [color, setColor] = useState("");
 
-  // จัดการฟอร์มตอนกดบันทึกรองเท้า
-  const handleAddShoe = async (e) => {
+  // รูปหลัก 1 รูป
+  const [mainImage, setMainImage] = useState(null);
+
+  // กลุ่มรูปภาพรายละเอียด (เก็บเป็น Array)
+  const [detailImages, setDetailImages] = useState([]);
+
+  const [uploading, setUploading] = useState(false);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const form = e.target;
+    setUploading(true);
 
     try {
-      const coverFile = form["shoe-cover"].files[0];
-      const detailFiles = form["shoe-details"].files;
+      // ----------------------------------------------------
+      // 1. อัปโหลดรูปภาพหลัก (Main Image)
+      // ----------------------------------------------------
+      const mainFile = mainImage;
+      const mainExt = mainFile.name.split(".").pop();
+      const mainPath = `main_${Math.random()}.${mainExt}`;
 
-      // แปลงภาพหน้าปก
-      const coverBase64 = await fileToBase64(coverFile);
+      // ✨ เพิ่มบรรทัดนี้: สร้างไฟล์ใหม่เพื่อล้างชื่อภาษาไทยทิ้ง
+      const safeMainFile = new File([mainFile], mainPath, {
+        type: mainFile.type,
+      });
 
-      // แปลงภาพรายละเอียด (หลายภาพ)
-      const detailsBase64 = [];
-      for (let file of detailFiles) {
-        detailsBase64.push(await fileToBase64(file));
+      let { error: mainUploadError } = await supabase.storage
+        .from("crocs_images")
+        .upload(mainPath, safeMainFile); // <-- เปลี่ยนตรงนี้เป็น safeMainFile
+
+      if (mainUploadError) throw mainUploadError;
+
+      const { data: mainUrlData } = supabase.storage
+        .from("crocs_images")
+        .getPublicUrl(mainPath);
+
+      const mainImageUrl = mainUrlData.publicUrl;
+
+      // ----------------------------------------------------
+      // 2. อัปโหลดกลุ่มรูปภาพรายละเอียด (Detail Images)
+      // ----------------------------------------------------
+      let detailImageUrls = [];
+
+      for (const file of detailImages) {
+        const fileExt = file.name.split(".").pop();
+        const filePath = `detail_${Math.random()}.${fileExt}`;
+
+        // ✨ เพิ่มบรรทัดนี้: สร้างไฟล์ใหม่เพื่อล้างชื่อภาษาไทยทิ้ง
+        const safeDetailFile = new File([file], filePath, { type: file.type });
+
+        let { error: detailUploadError } = await supabase.storage
+          .from("crocs_images")
+          .upload(filePath, safeDetailFile); // <-- เปลี่ยนตรงนี้เป็น safeDetailFile
+
+        if (detailUploadError) throw detailUploadError;
+
+        const { data: detailUrlData } = supabase.storage
+          .from("crocs_images")
+          .getPublicUrl(filePath);
+
+        detailImageUrls.push(detailUrlData.publicUrl);
       }
 
-      // สร้าง Object รองเท้าคู่ใหม่
-      const newShoe = {
-        id: form["shoe-id"].value,
-        model: form["shoe-model"].value,
-        size: form["shoe-size"].value,
-        color: form["shoe-color"].value,
-        price: form["shoe-price"].value,
-        date: form["shoe-date"].value,
-        coverImage: coverBase64,
-        detailImages: detailsBase64,
-      };
+      // ----------------------------------------------------
+      // 3. บันทึกข้อมูลทั้งหมดลงตาราง shoes
+      // ----------------------------------------------------
+      const { error: insertError } = await supabase.from("shoes").insert([
+        {
+          model: model,
+          price: parseFloat(price),
+          size: size,
+          color: color,
+          image_url: mainImageUrl, // ลิงก์รูปหลัก
+          detail_images: detailImageUrls, // ลิงก์กลุ่มรูปภาพ (ส่งไปเป็น Array)
+        },
+      ]);
 
-      // ส่งข้อมูลกลับไปให้ App.jsx เพื่ออัปเดต State หลัก
-      onSave(newShoe);
+      if (insertError) throw insertError;
 
-      // แจ้งเตือนเมื่อเสร็จสิ้น
-      alert("บันทึกสำเร็จ!");
+      alert("บันทึกข้อมูลและอัปโหลดรูปทั้งหมดสำเร็จแล้ว! 🇰🇷");
+
+      // ล้างค่าฟอร์ม
+      setModel("");
+      setPrice("");
+      setSize("");
+      setColor("");
+      setMainImage(null);
+      setDetailImages([]);
+
+      // Reset ช่อง file input ให้ว่าง
+      document.getElementById("detail-image-input").value = "";
+      document.getElementById("main-image-input").value = "";
     } catch (error) {
-      alert("เกิดข้อผิดพลาด: รูปภาพอาจใหญ่เกินไป");
-      console.error(error);
+      alert("เกิดข้อผิดพลาด: " + error.message);
+    } finally {
+      setUploading(false);
     }
   };
 
   return (
-    <div id="add-view">
-      {/* เมื่อกดปุ่มนี้ จะเรียกฟังก์ชัน onBack เพื่อกลับหน้าหลัก */}
-      <button className="btn-back" onClick={onBack}>
-        ← กลับหน้ารายการ
-      </button>
+    <form onSubmit={handleSubmit} style={{ padding: "20px" }}>
+      <h2>เพิ่มรองเท้าใหม่ (พร้อมกลุ่มรูปภาพ)</h2>
 
-      <div className="form-container">
-        <h2>เพิ่มรองเท้าเข้าสต๊อก</h2>
-        <form onSubmit={handleAddShoe}>
-          <div className="form-group">
-            <label>ID รหัสสินค้า</label>
-            <input type="text" name="shoe-id" required />
-          </div>
-          <div className="form-group">
-            <label>ชื่อรุ่น</label>
-            <select name="shoe-model">
-              <option value="Classic">Classic</option>
-              <option value="Platform">Platform</option>
-              <option value="Crush">Crush</option>
-              <option value="Classic Baya">Classic Baya</option>
-              <option value="Platform Baya">Platform Baya</option>
-            </select>
-          </div>
-          <div className="form-group">
-            <label>ไซส์ (Size)</label>
-            <select name="shoe-size">
-              <option value="M4/W6">M4/W6</option>
-              <option value="M5/W7">M5/W7</option>
-              <option value="M6/W8">M6/W8</option>
-              <option value="M7/W9">M7/W9</option>
-              <option value="M8/W10">M8/W10</option>
-              <option value="M9/W11">M9/W11</option>
-              <option value="M10/W12">M10/W12</option>
-              <option value="M11">M11</option>
-              <option value="M12">M12</option>
-              <option value="M13">M13</option>
-            </select>
-          </div>
-          <div className="form-group">
-            <label>สี</label>
-            <input type="text" name="shoe-color" required />
-          </div>
-          <div className="form-group">
-            <label>ราคา</label>
-            <input type="number" name="shoe-price" required />
-          </div>
-          <div className="form-group">
-            <label>วันที่เพิ่ม</label>
-            <input type="date" name="shoe-date" required />
-          </div>
-          <div className="form-group">
-            <label>ภาพหน้าปก (1 ภาพ)</label>
-            <input type="file" name="shoe-cover" accept="image/*" required />
-          </div>
-          <div className="form-group">
-            <label>ภาพรายละเอียด (เลือกหลายภาพได้)</label>
-            <input
-              type="file"
-              name="shoe-details"
-              accept="image/*"
-              multiple
-              required
-            />
-          </div>
-          <button
-            type="submit"
-            className="btn-primary"
-            style={{ width: "100%" }}
-          >
-            บันทึกข้อมูล
-          </button>
-        </form>
+      <input
+        type="text"
+        placeholder="ชื่อรุ่น"
+        value={model}
+        onChange={(e) => setModel(e.target.value)}
+        required
+      />
+      <br />
+      <br />
+      <input
+        type="text"
+        placeholder="สี (เช่น ดำ, ขาว, ชมพู)"
+        value={color}
+        onChange={(e) => setColor(e.target.value)}
+        required
+      />
+      <br />
+      <br />
+
+      <select value={size} onChange={(e) => setSize(e.target.value)} required>
+        <option value="" disabled>
+          เลือกไซส์
+        </option>
+        <option value="M4/W6">M4/W6</option>
+        <option value="M5/W7">M5/W7</option>
+        <option value="M6/W8">M6/W8</option>
+        <option value="M7/W9">M7/W9</option>
+        <option value="M8/W10">M8/W10</option>
+        <option value="M9/W11">M9/W11</option>
+        <option value="M10/W12">M10/W12</option>
+        <option value="M11">M11</option>
+        <option value="M12">M12</option>
+        <option value="M13">M13</option>
+      </select>
+      <br />
+      <br />
+
+      <input
+        type="number"
+        placeholder="ราคา"
+        value={price}
+        onChange={(e) => setPrice(e.target.value)}
+        required
+      />
+      <br />
+      <br />
+
+      <hr />
+
+      <div>
+        <label>
+          <b>1. รูปภาพหลัก (โชว์หน้าแรก): </b>
+        </label>
+        <br />
+        <input
+          id="main-image-input"
+          type="file"
+          accept="image/*"
+          onChange={(e) => setMainImage(e.target.files[0])}
+          required
+        />
       </div>
-    </div>
+      <br />
+
+      <div>
+        <label>
+          <b>2. กลุ่มรูปภาพรายละเอียด (เลือกได้หลายรูป): </b>
+        </label>
+        <br />
+        {/* ใส่คำว่า multiple เพื่อให้กดเลือกทีละหลายๆ รูปพร้อมกันได้ */}
+        <input
+          id="detail-image-input"
+          type="file"
+          accept="image/*"
+          multiple
+          onChange={(e) => setDetailImages(Array.from(e.target.files))}
+        />
+        <p style={{ fontSize: "12px", color: "gray" }}>
+          * กดลากคลุมหรือกด Ctrl ค้างไว้เพื่อเลือกหลายรูป
+        </p>
+      </div>
+      <br />
+
+      <button type="submit" disabled={uploading}>
+        {uploading ? "กำลังอัปโหลดรูปและบันทึก..." : "บันทึกลง Cloud"}
+      </button>
+    </form>
   );
 }
 
