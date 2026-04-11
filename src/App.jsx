@@ -77,6 +77,123 @@ function App() {
     );
   }
 
+  // --- ฟังก์ชันตัวช่วย: ดึงชื่อไฟล์ออกจาก URL (เพราะ Supabase สั่งลบด้วย URL เต็มๆ ไม่ได้ ต้องใช้ชื่อไฟล์) ---
+  const getFilePathFromUrl = (url) => {
+    if (!url) return null;
+    // เปลี่ยน "crocs_images" เป็นชื่อ Bucket ที่คุณตั้งไว้ใน Supabase นะครับ
+    const parts = url.split("/crocs_images/");
+    return parts.length > 1 ? parts[1] : null;
+  };
+
+  // --- ฟังก์ชันหลัก: จัดการอัปเดตข้อมูลและรูปภาพ ---
+  const handleUpdateShoe = async (
+    id,
+    updatedData,
+    newCoverFile,
+    newDetailFiles,
+  ) => {
+    try {
+      alert("กำลังอัปเดตข้อมูล... กรุณารอสักครู่ครับ ⏳");
+
+      // 1. หาข้อมูลรองเท้าคู่เดิม เพื่อเอา URL รูปเก่ามาเตรียมลบ
+      const currentShoe = inventory.find(
+        (shoe) => String(shoe.id) === String(id),
+      );
+      let finalImageUrl = currentShoe.image_url;
+      let finalDetailImages = currentShoe.detail_images || [];
+
+      // ==========================================
+      // 2. จัดการรูปหน้าปก (ถ้ามีการเลือกไฟล์ใหม่)
+      // ==========================================
+      if (newCoverFile) {
+        // ลบรูปเก่า
+        const oldCoverPath = getFilePathFromUrl(currentShoe.image_url);
+        if (oldCoverPath) {
+          await supabase.storage.from("crocs_images").remove([oldCoverPath]);
+        }
+
+        // อัปโหลดรูปใหม่ด้วย ArrayBuffer
+        const fileExt = newCoverFile.name.split(".").pop();
+        const fileName = `cover_${Date.now()}.${fileExt}`; // ตั้งชื่อไฟล์ใหม่กันซ้ำ
+        const arrayBuffer = await newCoverFile.arrayBuffer();
+
+        const { error: uploadError } = await supabase.storage
+          .from("crocs_images")
+          .upload(fileName, arrayBuffer, { contentType: newCoverFile.type });
+
+        if (uploadError) throw uploadError;
+
+        // ขอ URL เส้นใหม่
+        const { data: publicUrlData } = supabase.storage
+          .from("crocs_images")
+          .getPublicUrl(fileName);
+        finalImageUrl = publicUrlData.publicUrl;
+      }
+
+      // ==========================================
+      // 3. จัดการรูปรายละเอียด (ถ้ามีการเลือกไฟล์ใหม่)
+      // ==========================================
+      if (newDetailFiles && newDetailFiles.length > 0) {
+        // ลบรูปรายละเอียดเก่าทั้งหมด
+        if (currentShoe.detail_images && currentShoe.detail_images.length > 0) {
+          const oldPaths = currentShoe.detail_images
+            .map((url) => getFilePathFromUrl(url))
+            .filter((path) => path !== null); // กรองค่าที่พังทิ้ง
+
+          if (oldPaths.length > 0) {
+            await supabase.storage.from("crocs_images").remove(oldPaths);
+          }
+        }
+
+        // อัปโหลดรูปรายละเอียดใหม่ทั้งหมด
+        const newDetailUrls = [];
+        for (let i = 0; i < newDetailFiles.length; i++) {
+          const file = newDetailFiles[i];
+          const fileExt = file.name.split(".").pop();
+          const fileName = `detail_${id}_${Date.now()}_${i}.${fileExt}`;
+          const arrayBuffer = await file.arrayBuffer();
+
+          const { error: uploadError } = await supabase.storage
+            .from("crocs_images")
+            .upload(fileName, arrayBuffer, { contentType: file.type });
+
+          if (uploadError) throw uploadError;
+
+          const { data: publicUrlData } = supabase.storage
+            .from("crocs_images")
+            .getPublicUrl(fileName);
+          newDetailUrls.push(publicUrlData.publicUrl);
+        }
+        finalDetailImages = newDetailUrls;
+      }
+
+      // ==========================================
+      // 4. อัปเดตข้อมูลทั้งหมดลง Database
+      // ==========================================
+      const dataToUpdate = {
+        ...updatedData, // ข้อมูล รุ่น, ไซส์, สี, ราคา ที่พิมพ์แก้
+        image_url: finalImageUrl,
+        detail_images: finalDetailImages,
+      };
+
+      const { error: updateError } = await supabase
+        .from("shoes")
+        .update(dataToUpdate)
+        .eq("id", id); // อัปเดตเฉพาะคู่ที่ ID ตรงกัน
+
+      if (updateError) throw updateError;
+
+      // 5. โหลดข้อมูลใหม่เพื่อให้หน้าเว็บรีเฟรช และเปลี่ยนหน้ากลับไปดูรายละเอียด
+      alert("อัปเดตข้อมูลและรูปภาพเรียบร้อยแล้ว! 🎉");
+      await fetchShoes(); // เรียกใช้ฟังก์ชัน fetchShoes ที่เราเคยเขียนไว้เพื่อดึงข้อมูลใหม่
+
+      setView("list");
+    } catch (error) {
+      console.error("Error updating shoe:", error);
+      alert("เกิดข้อผิดพลาดในการอัปเดตข้อมูลครับ ดูรายละเอียดใน Console");
+    }
+  };
+
   return (
     <div className="app-container">
       {view === "list" && (
@@ -97,6 +214,7 @@ function App() {
           shoe={selectedShoe}
           onBack={() => setView("list")}
           onDelete={handleDeleteShoe}
+          onUpdateShoe={handleUpdateShoe}
         />
       )}
     </div>
