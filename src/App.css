@@ -1,4 +1,10 @@
 /* App.css */
+body {
+  background-color: #00041b; /* เปลี่ยนเป็นสีที่คุณต้องการ */
+  margin: 0;
+  padding: 0;
+  font-family: "Arial", sans-serif; /* แนะนำให้กำหนดฟอนต์ไว้ที่นี่ด้วยเลย */
+}
 .grid-4 {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -22,6 +28,7 @@
 .card:hover {
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
 }
+
 /* เพิ่มส่วนนี้เผื่อเปิดดูในมือถือหรือแท็บเล็ต ให้รูปเรียงแบบ 2 ช่อง หรือ 1 ช่อง */
 @media (max-width: 1024px) {
   .grid-4 {
@@ -32,4 +39,129 @@
   .grid-4 {
     grid-template-columns: 1fr;
   }
+}
+
+/* --- ส่วนสไตล์ของหน้า Shoe Detail --- */
+
+.shoe-detail-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.shoe-detail-content {
+  padding-bottom: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.btn-back-outline {
+  margin-bottom: 20px;
+  padding: 8px 16px;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.btn-back-outline:hover {
+  background-color: #f1f1f1;
+  border-color: #aaa;
+}
+
+.text-center-mt50 {
+  text-align: center;
+  margin-top: 50px;
+}
+
+/* --- ส่วนสไตล์ของหน้า Add Shoe --- */
+.add-shoe-form {
+  margin: 2rem auto;
+  width: 100%;
+  max-width: 600px;
+  padding: 30px 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+}
+
+.add-shoe-title {
+  margin: 0 0 10px 0;
+  color: #ffffff;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.form-row {
+  display: flex;
+  gap: 15px;
+  width: 100%;
+}
+
+.form-row .form-group {
+  flex: 1; /* ทำให้ช่องสีและไซส์แบ่งครึ่งกันพอดี */
+}
+
+.form-control {
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.form-label {
+  font-weight: bold;
+  font-size: 15px;
+  color: #ffffff;
+}
+
+.form-label-blue {
+  font-weight: bold;
+  font-size: 15px;
+  color: #2e86c1;
+}
+
+.form-divider {
+  width: 100%;
+  border: none;
+  border-top: 1px solid #ddd;
+  margin: 10px 0;
+}
+
+.form-helper-text {
+  font-size: 13px;
+  color: #666;
+  margin-top: -4px;
+}
+
+.btn-submit {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  background-color: #27ae60;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+/* สไตล์ตอนที่ปุ่มถูก disabled (ตอนกำลังอัปโหลด) */
+.btn-submit:disabled {
+  background-color: #95a5a6;
+  cursor: not-allowed;
 }

@@ -38,9 +38,18 @@ function ShoeList({ onAddClick, onShoeClick }) {
   });
 
   return (
-    <div id="list-view">
+    <div id="list-view" style={{ textAlign: "center" }}>
       <h1>สต๊อกรองเท้า Crocs</h1>
-      <div className="header-actions">
+      <div
+        className="header-actions"
+        style={{
+          width: "600px",
+          display: "flex",
+          justifyContent: "center",
+          gap: "3rem",
+          margin: "2rem auto",
+        }}
+      >
         <div>
           <label>
             <b>หมวดหมู่ไซส์: </b>
@@ -77,11 +86,10 @@ function ShoeList({ onAddClick, onShoeClick }) {
             <option value="ดำ">ดำ</option>
           </select>
         </div>
-
-        <button className="btn-primary" onClick={onAddClick}>
-          + เพิ่มรองเท้าใหม่
-        </button>
       </div>
+      <button className="btn-primary" onClick={onAddClick}>
+        + เพิ่มรองเท้าใหม่
+      </button>
 
       <div className="grid-4" style={{ marginTop: "64px" }}>
         {filteredInventory.map((shoe) => (

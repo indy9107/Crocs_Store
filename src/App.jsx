@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 // 1. ลบ localforage ทิ้ง แล้วเรียกใช้ Supabase แทน
 import { supabase } from "./supabaseClient";
 import ShoeList from "./components/ShoeList";
-import AddShoe from "./components/AddShoe";
-import ShoeDetail from "./components/ShoeDetail";
+import AddShoe from "./components/AddShoe/AddShoe";
+import ShoeDetail from "./components/ShoeDetail/ShoeDetail";
 import ShoeCard from "./components/ShoeCard"; // ถ้าในหน้านี้ไม่ได้ใช้ ShoeCard ลบทิ้งได้นะครับ
 import "./App.css";
 

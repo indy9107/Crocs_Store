@@ -1,12 +1,13 @@
 import React from "react";
 
-// รับ props:
-// - shoe: ข้อมูลรองเท้าแต่ละคู่
-// - onClick: ฟังก์ชันที่จะทำงานเมื่อคลิกที่การ์ด
 function ShoeCard({ shoe, onClick }) {
   return (
     <div className="card" onClick={() => onClick(shoe.id)}>
-      <img style={{ width: "200px" }} src={shoe.image_url} alt={shoe.model} />
+      <img
+        style={{ width: "200px", borderRadius: "7px" }}
+        src={shoe.image_url}
+        alt={shoe.model}
+      />
       <div className="card-info">
         <h3>{shoe.model}</h3>
         <p>
