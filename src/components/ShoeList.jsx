@@ -5,6 +5,7 @@ import ShoeCard from "./ShoeCard";
 function ShoeList({ onAddClick, onShoeClick }) {
   // สังเกตว่าผมเอา prop 'inventory' ออกไปแล้ว เพราะเราจะดึงจาก Cloud แทน
   const [filterSize, setFilterSize] = useState("all");
+  const [filterColor, setFilterColor] = useState("all");
   const [shoes, setShoes] = useState([]); // 2. สร้าง state สำหรับเก็บข้อมูลรองเท้า
 
   // 3. ใช้ useEffect เพื่อเรียก fetchShoes ทันทีที่เปิดหน้านี้ขึ้นมา
@@ -26,10 +27,15 @@ function ShoeList({ onAddClick, onShoeClick }) {
   };
 
   // 4. เปลี่ยนมาฟิลเตอร์จาก state 'shoes' แทน 'inventory' ตัวเก่า
-  const filteredInventory =
-    filterSize === "all"
-      ? shoes
-      : shoes.filter((shoe) => shoe.size === filterSize);
+  const filteredInventory = shoes.filter((shoe) => {
+    // เช็คเงื่อนไขไซส์
+    const isSizeMatch = filterSize === "all" || shoe.size === filterSize;
+    // เช็คเงื่อนไขสี
+    const isColorMatch = filterColor === "all" || shoe.color === filterColor;
+
+    // โชว์เฉพาะคู่ที่ผ่านทั้ง 2 เงื่อนไข
+    return isSizeMatch && isColorMatch;
+  });
 
   return (
     <div id="list-view">
@@ -54,6 +60,21 @@ function ShoeList({ onAddClick, onShoeClick }) {
             <option value="M11">M11</option>
             <option value="M12">M12</option>
             <option value="M13">M13</option>
+          </select>
+        </div>
+        <div>
+          <label>
+            <b>หมวดหมู่สี: </b>
+          </label>
+          <select
+            value={filterColor}
+            onChange={(e) => setFilterColor(e.target.value)}
+          >
+            <option value="all">ทั้งหมด</option>
+            <option value="ขาว">ขาว</option>
+            <option value="ครีม">ครีม</option>
+            <option value="เทา">เทา</option>
+            <option value="ดำ">ดำ</option>
           </select>
         </div>
 
