@@ -39,17 +39,8 @@ function ShoeList({ onAddClick, onShoeClick }) {
 
   return (
     <div id="list-view" style={{ textAlign: "center" }}>
-      <h1>สต๊อกรองเท้า Crocs</h1>
-      <div
-        className="header-actions"
-        style={{
-          width: "600px",
-          display: "flex",
-          justifyContent: "center",
-          gap: "3rem",
-          margin: "2rem auto",
-        }}
-      >
+      <h1 style={{ color: "white" }}>สต๊อกรองเท้า Crocs</h1>
+      <div className="header-actions">
         <div>
           <label>
             <b>หมวดหมู่ไซส์: </b>

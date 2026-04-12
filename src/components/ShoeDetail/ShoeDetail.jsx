@@ -102,7 +102,11 @@ function ShoeDetail({ shoe, onBack, onDelete, onUpdateShoe }) {
   return (
     <div className="shoe-detail-container">
       {/* ปุ่มกลับ */}
-      <button className="btn-back-outline" onClick={onBack}>
+      <button
+        style={{ color: "black" }}
+        className="btn-back-outline"
+        onClick={onBack}
+      >
         &larr; กลับหน้ารายการ
       </button>
 

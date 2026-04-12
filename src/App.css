@@ -1,10 +1,17 @@
 /* App.css */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
 body {
-  background-color: #00041b; /* เปลี่ยนเป็นสีที่คุณต้องการ */
+  background-color: #00041b;
   margin: 0;
   padding: 0;
-  font-family: "Arial", sans-serif; /* แนะนำให้กำหนดฟอนต์ไว้ที่นี่ด้วยเลย */
+  font-family: "Arial", sans-serif;
 }
+
 .grid-4 {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -38,6 +45,15 @@ body {
 @media (max-width: 600px) {
   .grid-4 {
     grid-template-columns: 1fr;
+  }
+  .header-actions {
+    width: 200px !important; /* important คือ บังคับให้ใช้ค่าทีกำหนดเท่านั้น */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: stretch; /* สั่งให้ช่อง Select กับปุ่ม ขยายความกว้างเต็มกล่อง */
+    margin: 2rem auto;
+    gap: 15px;
   }
 }
 
@@ -164,4 +180,12 @@ body {
 .btn-submit:disabled {
   background-color: #95a5a6;
   cursor: not-allowed;
+}
+
+.header-actions {
+  width: 600px;
+  display: flex;
+  justify-content: center;
+  gap: 3rem;
+  margin: 2rem auto;
 }

@@ -19,7 +19,7 @@ function ShoeInfoDisplay({ shoe, onShare, onDelete, onToggleEdit }) {
   return (
     <div>
       {/* 1. ส่วนแสดงข้อความ */}
-      <h2 style={{ margin: "0 0 15px 0", fontSize: "24px", color: "#222" }}>
+      <h2 style={{ margin: "0 0 15px 0", fontSize: "24px", color: "#ffffff" }}>
         {shoe.model}{" "}
         <span style={{ fontSize: "14px", color: "#888", fontWeight: "normal" }}>
           (ID: {shoe.id})
@@ -30,7 +30,7 @@ function ShoeInfoDisplay({ shoe, onShare, onDelete, onToggleEdit }) {
           display: "flex",
           gap: "20px",
           flexWrap: "wrap",
-          color: "#444",
+          color: "#ffffff",
           fontSize: "16px",
         }}
       >
