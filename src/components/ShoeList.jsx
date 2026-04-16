@@ -50,6 +50,7 @@ function ShoeList({ onAddClick, onShoeClick }) {
             onChange={(e) => setFilterSize(e.target.value)}
           >
             <option value="all">ทั้งหมด</option>
+            <option value="M4/W6">M3/W5</option>
             <option value="M4/W6">M4/W6</option>
             <option value="M5/W7">M5/W7</option>
             <option value="M6/W8">M6/W8</option>

@@ -14,27 +14,41 @@ function AddShoeBasicFields({
     <>
       <div className="form-group">
         <label className="form-label">ชื่อรุ่นรองเท้า</label>
-        <input
+
+        <select
           className="form-control"
-          type="text"
           placeholder="เช่น Crocs Classic Clog"
           value={model}
           onChange={(e) => setModel(e.target.value)}
           required
-        />
+        >
+          <option value="Classic">Classic</option>
+          <option value="Platform">Platform</option>
+          <option value="Classic Baya">Classic Baya</option>
+          <option value="Platform Baya">Platform Baya</option>
+          <option value="Bae">Bae</option>
+          <option value="Bella">Bella</option>
+          <option value="literide">literide</option>
+        </select>
       </div>
 
       <div className="form-row">
         <div className="form-group">
           <label className="form-label">สี</label>
-          <input
+          <select
             className="form-control"
-            type="text"
+            onChange={(e) => setColor(e.target.value)}
             placeholder="เช่น ดำ, ขาว, ชมพู"
             value={color}
-            onChange={(e) => setColor(e.target.value)}
             required
-          />
+          >
+            <option value="ดำ">ดำ</option>
+            <option value="ขาว">ขาว</option>
+            <option value="ครีม">ครีม</option>
+            <option value="เทา">เทา</option>
+            <option value="กรม">กรม</option>
+            <option value="ชมพูอ่อน">ชมพูอ่อน</option>
+          </select>
         </div>
 
         <div className="form-group">
@@ -48,6 +62,7 @@ function AddShoeBasicFields({
             <option value="" disabled>
               เลือกไซส์
             </option>
+            <option value="M3/W5">M3/W5</option>
             <option value="M4/W6">M4/W6</option>
             <option value="M5/W7">M5/W7</option>
             <option value="M6/W8">M6/W8</option>
