@@ -24,11 +24,14 @@ function AddShoeBasicFields({
         >
           <option value="Classic">Classic</option>
           <option value="Platform">Platform</option>
+          <option value="Crush">Crush</option>
+          <option value="MegaCrush">MegaCrush</option>
           <option value="Classic Baya">Classic Baya</option>
           <option value="Platform Baya">Platform Baya</option>
           <option value="Bae">Bae</option>
           <option value="Bella">Bella</option>
           <option value="literide">literide</option>
+          <option value="Other">Other</option>
         </select>
       </div>
 

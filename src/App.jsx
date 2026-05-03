@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-// 1. ลบ localforage ทิ้ง แล้วเรียกใช้ Supabase แทน
 import { supabase } from "./supabaseClient";
 import ShoeList from "./components/ShoeList";
 import AddShoe from "./components/AddShoe/AddShoe";
