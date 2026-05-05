@@ -1,4 +1,5 @@
 import React from "react";
+import "../../App.css";
 
 function ShoeEditForm({
   editModel,
@@ -14,88 +15,47 @@ function ShoeEditForm({
   onSave,
   onCancel,
 }) {
-  // --- สไตล์ที่ใช้เฉพาะในฟอร์มนี้ ---
-  const inputStyle = {
-    padding: "10px",
-    borderRadius: "6px",
-    border: "1px solid #ccc",
-    fontSize: "15px",
-    width: "100%",
-    boxSizing: "border-box",
-  };
-
-  const labelStyle = {
-    fontWeight: "bold",
-    fontSize: "14px",
-    color: "#555",
-    marginBottom: "5px",
-    display: "block",
-  };
-
-  const buttonBaseStyle = {
-    padding: "10px 16px",
-    borderRadius: "6px",
-    fontSize: "15px",
-    fontWeight: "bold",
-    border: "none",
-    cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: "8px",
-    transition: "all 0.2s",
-  };
-
   return (
     <div>
       {/* 1. ส่วนฟอร์มแก้ไขข้อความ */}
-      <div
-        style={{
-          backgroundColor: "#f9f9f9",
-          padding: "20px",
-          borderRadius: "8px",
-          border: "1px solid #ddd",
-        }}
-      >
-        <h3 style={{ margin: "0 0 15px 0", color: "#F39C12" }}>
-          ✏️ แก้ไขข้อมูลสินค้า
-        </h3>
+      <div className="shoe-edit-form-container">
+        <h3 className="shoe-edit-form-header">✏️ แก้ไขข้อมูลสินค้า</h3>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
+        <div className="shoe-edit-form-fields">
           <div>
-            <label style={labelStyle}>ชื่อรุ่น:</label>
+            <label className="shoe-edit-label">ชื่อรุ่น:</label>
             <input
               type="text"
-              style={inputStyle}
+              className="shoe-edit-input"
               value={editModel}
               onChange={(e) => setEditModel(e.target.value)}
             />
           </div>
 
-          <div style={{ display: "flex", gap: "15px", flexWrap: "wrap" }}>
-            <div style={{ flex: 1, minWidth: "120px" }}>
-              <label style={labelStyle}>ไซส์:</label>
+          <div className="shoe-edit-size-color-price">
+            <div>
+              <label className="shoe-edit-label">ไซส์:</label>
               <input
                 type="text"
-                style={inputStyle}
+                className="shoe-edit-input"
                 value={editSize}
                 onChange={(e) => setEditSize(e.target.value)}
               />
             </div>
-            <div style={{ flex: 1, minWidth: "120px" }}>
-              <label style={labelStyle}>สี:</label>
+            <div>
+              <label className="shoe-edit-label">สี:</label>
               <input
                 type="text"
-                style={inputStyle}
+                className="shoe-edit-input"
                 value={editColor}
                 onChange={(e) => setEditColor(e.target.value)}
               />
             </div>
-            <div style={{ flex: 1, minWidth: "120px" }}>
-              <label style={labelStyle}>ราคา (฿):</label>
+            <div>
+              <label className="shoe-edit-label">ราคา (฿):</label>
               <input
                 type="number"
-                style={inputStyle}
+                className="shoe-edit-input"
                 value={editPrice}
                 onChange={(e) => setEditPrice(e.target.value)}
               />
@@ -104,20 +64,10 @@ function ShoeEditForm({
         </div>
 
         {/* ปุ่มยกเลิก */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "flex-end",
-            marginTop: "20px",
-          }}
-        >
+        <div className="shoe-edit-cancel-button">
           <button
             onClick={onCancel}
-            style={{
-              ...buttonBaseStyle,
-              backgroundColor: "#95A5A6",
-              color: "white",
-            }}
+            className="shoe-edit-button-base shoe-edit-cancel-btn"
           >
             ❌ ยกเลิกการแก้ไข
           </button>
@@ -125,39 +75,26 @@ function ShoeEditForm({
       </div>
 
       {/* 2. ส่วนฟอร์มอัปเดตรูปภาพ */}
-      <div
-        style={{
-          marginTop: "20px",
-          padding: "20px",
-          border: "2px dashed #F39C12",
-          borderRadius: "8px",
-          backgroundColor: "#FFF9F2",
-        }}
-      >
-        <h3
-          style={{
-            color: "#D68910",
-            marginTop: "0",
-            marginBottom: "15px",
-            fontSize: "18px",
-          }}
-        >
+      <div className="shoe-edit-image-container">
+        <h3 className="shoe-edit-image-header">
           🖼️ อัปเดตรูปภาพใหม่ (เลือกเฉพาะรูปที่ต้องการเปลี่ยน)
         </h3>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
+        <div className="shoe-edit-image-fields">
           <div>
-            <label style={labelStyle}>1. เปลี่ยนรูปหน้าปก (เลือก 1 รูป):</label>
+            <label className="shoe-edit-label">
+              1. เปลี่ยนรูปหน้าปก (เลือก 1 รูป):
+            </label>
             <input
               type="file"
               accept="image/*"
               onChange={onCoverChange}
-              style={inputStyle}
+              className="shoe-edit-input"
             />
           </div>
 
           <div>
-            <label style={labelStyle}>
+            <label className="shoe-edit-label">
               2. เปลี่ยนรูปรายละเอียด (เลือกได้หลายรูป):
             </label>
             <input
@@ -165,16 +102,10 @@ function ShoeEditForm({
               accept="image/*"
               multiple
               onChange={onDetailChange}
-              style={inputStyle}
+              className="shoe-edit-input"
+              style={{ marginBottom: "2rem" }}
             />
-            <span
-              style={{
-                fontSize: "13px",
-                color: "#e74c3c",
-                display: "block",
-                marginTop: "5px",
-              }}
-            >
+            <span className="shoe-edit-helper-text">
               *ระวัง: การอัปโหลดใหม่จะไปแทนที่รูปรายละเอียดเดิมทั้งหมด
             </span>
           </div>
@@ -183,14 +114,7 @@ function ShoeEditForm({
         {/* ปุ่มบันทึก */}
         <button
           onClick={onSave}
-          style={{
-            ...buttonBaseStyle,
-            backgroundColor: "#27AE60",
-            color: "white",
-            width: "100%",
-            marginTop: "20px",
-            padding: "12px",
-          }}
+          className="shoe-edit-button-base shoe-edit-save-btn"
         >
           💾 ยืนยันการบันทึกข้อมูลทั้งหมด
         </button>

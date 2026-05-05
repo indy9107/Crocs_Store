@@ -402,6 +402,85 @@ code {
   color: #fff;
 }
 
+/* ---------- Shoe Edit Form Styles ---------- */
+.shoe-edit-input {
+  padding: 11px 13px; /* ปรับให้เท่ากับ form-control */
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-h);
+  font: inherit;
+  font-size: 15px;
+  width: 100%;
+  transition: border-color 0.2s var(--ease);
+}
+
+.shoe-edit-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.shoe-edit-label {
+  font-weight: 600;
+  font-size: 13px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+  display: block;
+}
+
+.shoe-edit-form-container {
+  background-color: var(--bg-elev);
+  padding: 24px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  margin-bottom: 20px;
+}
+
+.shoe-edit-form-header {
+  margin: 0 0 15px 0;
+  color: var(--accent); /* ใช้สีส้มตามธีม */
+  font-size: 1.2rem;
+}
+
+.shoe-edit-image-container {
+  margin-top: 20px;
+  padding: 24px;
+  border: 2px dashed var(--border); /* ใช้เส้นประตามธีม */
+  border-radius: var(--radius);
+  background-color: var(--bg-elev);
+}
+
+/* แก้ไขจาก camelCase เป็น kebab-case */
+.shoe-edit-image-header {
+  color: var(--secondary);
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 18px;
+}
+
+.shoe-edit-image-fields {
+  display: flex;
+  flex-direction: column;
+  margin: 2rem 0;
+  gap: 15px;
+}
+
+.shoe-edit-save-btn {
+  background-color: var(
+    --secondary
+  ) !important; /* เปลี่ยนเป็นสีเขียว Sage ตามธีม */
+  color: white;
+  width: 100%;
+  margin-top: 20px;
+  padding: 12px;
+}
+
+.shoe-edit-cancel-button {
+  margin-top: 2rem;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
