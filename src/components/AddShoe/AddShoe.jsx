@@ -1,9 +1,18 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "../../supabaseClient";
-import AddShoeBasicFields from "./AddShoeBasicFields"; // ✨ Import ไฟล์ลูกที่ 1
-import AddShoeImageFields from "./AddShoeImageFields"; // ✨ Import ไฟล์ลูกที่ 2
+import { uploadImage } from "../../utils/storage";
+import { compressImage, compressImages } from "../../utils/imageCompression";
+import AddShoeBasicFields from "./AddShoeBasicFields";
+import AddShoeImageFields from "./AddShoeImageFields";
+
+// คุมขนาดสูงสุด: หน้าปกใช้แค่โชว์ในกริด, รายละเอียดเผื่อซูม
+const COVER_OPTS = { maxWidth: 1200, maxHeight: 1200, quality: 0.82 };
+const DETAIL_OPTS = { maxWidth: 1600, maxHeight: 1600, quality: 0.85 };
 
 function AddShoe() {
+  const navigate = useNavigate();
+
   const [model, setModel] = useState("");
   const [price, setPrice] = useState("");
   const [size, setSize] = useState("");
@@ -12,55 +21,38 @@ function AddShoe() {
   const [mainImage, setMainImage] = useState(null);
   const [detailImages, setDetailImages] = useState([]);
   const [uploading, setUploading] = useState(false);
+  const [progressText, setProgressText] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setUploading(true);
 
     try {
-      // 1. อัปโหลดรูปภาพหลัก (Main Image)
-      const mainFile = mainImage;
-      const mainExt = mainFile.name.split(".").pop();
-      const mainPath = `main_${Math.random()}.${mainExt}`;
-      const safeMainFile = new File([mainFile], mainPath, {
-        type: mainFile.type,
-      });
+      setProgressText("กำลังบีบอัดรูป...");
+      const [compressedCover, compressedDetails] = await Promise.all([
+        compressImage(mainImage, COVER_OPTS),
+        compressImages(detailImages, DETAIL_OPTS),
+      ]);
 
-      let { error: mainUploadError } = await supabase.storage
-        .from("crocs_images")
-        .upload(mainPath, safeMainFile);
-      if (mainUploadError) throw mainUploadError;
+      setProgressText("กำลังอัปโหลดรูปหน้าปก...");
+      const mainImageUrl = await uploadImage(compressedCover, "main");
 
-      const { data: mainUrlData } = supabase.storage
-        .from("crocs_images")
-        .getPublicUrl(mainPath);
-      const mainImageUrl = mainUrlData.publicUrl;
-
-      // 2. อัปโหลดกลุ่มรูปภาพรายละเอียด (Detail Images)
-      let detailImageUrls = [];
-      for (const file of detailImages) {
-        const fileExt = file.name.split(".").pop();
-        const filePath = `detail_${Math.random()}.${fileExt}`;
-        const safeDetailFile = new File([file], filePath, { type: file.type });
-
-        let { error: detailUploadError } = await supabase.storage
-          .from("crocs_images")
-          .upload(filePath, safeDetailFile);
-        if (detailUploadError) throw detailUploadError;
-
-        const { data: detailUrlData } = supabase.storage
-          .from("crocs_images")
-          .getPublicUrl(filePath);
-        detailImageUrls.push(detailUrlData.publicUrl);
+      const detailImageUrls = [];
+      for (let i = 0; i < compressedDetails.length; i++) {
+        setProgressText(
+          `กำลังอัปโหลดรูปรายละเอียด ${i + 1}/${compressedDetails.length}...`,
+        );
+        const url = await uploadImage(compressedDetails[i], "detail");
+        detailImageUrls.push(url);
       }
 
-      // 3. บันทึกข้อมูลทั้งหมดลงตาราง shoes
+      setProgressText("กำลังบันทึกข้อมูล...");
       const { error: insertError } = await supabase.from("shoes").insert([
         {
-          model: model,
+          model,
           price: parseFloat(price),
-          size: size,
-          color: color,
+          size,
+          color,
           image_url: mainImageUrl,
           detail_images: detailImageUrls,
         },
@@ -68,28 +60,29 @@ function AddShoe() {
       if (insertError) throw insertError;
 
       alert("บันทึกข้อมูลและอัปโหลดรูปทั้งหมดสำเร็จแล้ว! 🇰🇷");
-
-      // ล้างค่าฟอร์ม
-      setModel("");
-      setPrice("");
-      setSize("");
-      setColor("");
-      setMainImage(null);
-      setDetailImages([]);
-      document.getElementById("detail-image-input").value = "";
-      document.getElementById("main-image-input").value = "";
+      navigate("/");
     } catch (error) {
       alert("เกิดข้อผิดพลาด: " + error.message);
     } finally {
       setUploading(false);
+      setProgressText("");
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="add-shoe-form">
+      <div style={{ marginBottom: "16px" }}>
+        <button
+          type="button"
+          className="btn-back-outline"
+          onClick={() => navigate("/")}
+        >
+          &larr; กลับหน้ารายการ
+        </button>
+      </div>
+
       <h2 className="add-shoe-title">👟 เพิ่มรองเท้าใหม่</h2>
 
-      {/* 🎯 เรียกใช้ Component ลูกที่ 1 (ส่ง State และ Setter ไปให้) */}
       <AddShoeBasicFields
         model={model}
         setModel={setModel}
@@ -103,14 +96,15 @@ function AddShoe() {
 
       <hr className="form-divider" />
 
-      {/* 🎯 เรียกใช้ Component ลูกที่ 2 (ส่งเฉพาะ Setter ไปให้เก็บไฟล์) */}
       <AddShoeImageFields
         setMainImage={setMainImage}
         setDetailImages={setDetailImages}
       />
 
       <button type="submit" disabled={uploading} className="btn-submit">
-        {uploading ? "⏳ กำลังอัปโหลดรูปและบันทึก..." : "💾 บันทึกลงระบบ"}
+        {uploading
+          ? `⏳ ${progressText || "กำลังบันทึก..."}`
+          : "💾 บันทึกลงระบบ"}
       </button>
     </form>
   );

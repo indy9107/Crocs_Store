@@ -1,12 +1,23 @@
 import React from "react";
 
-function ShoeCard({ shoe, onClick }) {
+function ShoeCard({ shoe, onClick, selectMode = false, isSelected = false }) {
+  const className = `card${selectMode ? " card-select-mode" : ""}${
+    isSelected ? " card-selected" : ""
+  }`;
+
   return (
-    <div className="card" onClick={() => onClick(shoe.id)}>
+    <div className={className} onClick={() => onClick(shoe.id)}>
+      {selectMode && (
+        <div className="card-checkbox" aria-hidden="true">
+          {isSelected ? "✓" : ""}
+        </div>
+      )}
       <img
         style={{ width: "200px", borderRadius: "7px" }}
         src={shoe.image_url}
         alt={shoe.model}
+        loading="lazy"
+        decoding="async"
       />
       <div className="card-info">
         <h3>{shoe.model}</h3>

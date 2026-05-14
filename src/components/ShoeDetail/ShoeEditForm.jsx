@@ -14,6 +14,7 @@ function ShoeEditForm({
   onDetailChange,
   onSave,
   onCancel,
+  isSaving = false,
 }) {
   return (
     <div>
@@ -114,9 +115,12 @@ function ShoeEditForm({
         {/* ปุ่มบันทึก */}
         <button
           onClick={onSave}
+          disabled={isSaving}
           className="shoe-edit-button-base shoe-edit-save-btn"
         >
-          💾 ยืนยันการบันทึกข้อมูลทั้งหมด
+          {isSaving
+            ? "⏳ กำลังบีบอัด/อัปโหลด..."
+            : "💾 ยืนยันการบันทึกข้อมูลทั้งหมด"}
         </button>
       </div>
     </div>

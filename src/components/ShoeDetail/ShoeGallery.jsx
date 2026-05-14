@@ -28,6 +28,8 @@ function ShoeGallery({ images }) {
             key={index}
             src={img}
             alt={`detail-${index}`}
+            loading="lazy"
+            decoding="async"
             style={{
               width: "100%",
               height: "250px",

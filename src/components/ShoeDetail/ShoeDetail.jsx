@@ -1,24 +1,155 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { supabase } from "../../supabaseClient";
+import {
+  getStoragePathFromPublicUrl,
+  removeImagesByPaths,
+  uploadImage,
+} from "../../utils/storage";
+import { compressImage, compressImages } from "../../utils/imageCompression";
 import ShoeInfoDisplay from "./ShoeInfoDisplay";
 import ShoeEditForm from "./ShoeEditForm";
 import ShoeGallery from "./ShoeGallery";
 
-function ShoeDetail({ shoe, onBack, onDelete, onUpdateShoe }) {
-  // --- State สำหรับโหมดแก้ไข ---
-  const [isEditingMode, setIsEditingMode] = useState(false);
+const COVER_OPTS = { maxWidth: 1200, maxHeight: 1200, quality: 0.82 };
+const DETAIL_OPTS = { maxWidth: 1600, maxHeight: 1600, quality: 0.85 };
 
-  // State สำหรับข้อความ
+function ShoeDetail() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+
+  const [shoe, setShoe] = useState(null);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const [isEditingMode, setIsEditingMode] = useState(false);
   const [editModel, setEditModel] = useState("");
   const [editSize, setEditSize] = useState("");
   const [editColor, setEditColor] = useState("");
   const [editPrice, setEditPrice] = useState("");
-
-  // State สำหรับรูปภาพ
   const [newCoverFile, setNewCoverFile] = useState(null);
   const [newDetailFiles, setNewDetailFiles] = useState([]);
 
+  useEffect(() => {
+    fetchShoe();
+  }, [id]);
+
+  const fetchShoe = async () => {
+    setIsLoaded(false);
+    try {
+      const { data, error } = await supabase
+        .from("shoes")
+        .select("*")
+        .eq("id", id)
+        .single();
+      if (error) throw error;
+      setShoe(data);
+    } catch (error) {
+      console.error("ดึงข้อมูลรองเท้าไม่สำเร็จ:", error);
+      setShoe(null);
+    } finally {
+      setIsLoaded(true);
+    }
+  };
+
+  const handleDelete = async (shoeId) => {
+    if (
+      !window.confirm("ยืนยันว่ารองเท้าคู่นี้ขายแล้ว และต้องการลบออกจากสต๊อก?")
+    ) {
+      return;
+    }
+    try {
+      const pathsToRemove = [
+        getStoragePathFromPublicUrl(shoe.image_url),
+        ...(shoe.detail_images || []).map(getStoragePathFromPublicUrl),
+      ];
+      await removeImagesByPaths(pathsToRemove);
+
+      const { error } = await supabase.from("shoes").delete().eq("id", shoeId);
+      if (error) throw error;
+      navigate("/");
+    } catch (error) {
+      console.error("ลบข้อมูลไม่สำเร็จ:", error);
+      alert("เกิดข้อผิดพลาดในการลบข้อมูลครับ");
+    }
+  };
+
+  const handleUpdateShoe = async (
+    shoeId,
+    updatedData,
+    coverFile,
+    detailFiles,
+  ) => {
+    setIsSaving(true);
+    try {
+      let finalImageUrl = shoe.image_url;
+      let finalDetailImages = shoe.detail_images || [];
+
+      if (coverFile) {
+        const compressed = await compressImage(coverFile, COVER_OPTS);
+        const oldPath = getStoragePathFromPublicUrl(shoe.image_url);
+        if (oldPath) await removeImagesByPaths([oldPath]);
+        finalImageUrl = await uploadImage(compressed, "cover");
+      }
+
+      if (detailFiles && detailFiles.length > 0) {
+        const oldPaths = (shoe.detail_images || []).map(
+          getStoragePathFromPublicUrl,
+        );
+        await removeImagesByPaths(oldPaths);
+
+        const compressed = await compressImages(detailFiles, DETAIL_OPTS);
+        const urls = [];
+        for (const file of compressed) {
+          urls.push(await uploadImage(file, `detail_${shoeId}`));
+        }
+        finalDetailImages = urls;
+      }
+
+      const { error: updateError } = await supabase
+        .from("shoes")
+        .update({
+          ...updatedData,
+          image_url: finalImageUrl,
+          detail_images: finalDetailImages,
+        })
+        .eq("id", shoeId);
+      if (updateError) throw updateError;
+
+      alert("อัปเดตข้อมูลและรูปภาพเรียบร้อยแล้ว! 🎉");
+      setIsEditingMode(false);
+      setNewCoverFile(null);
+      setNewDetailFiles([]);
+      await fetchShoe();
+    } catch (error) {
+      console.error("Error updating shoe:", error);
+      alert("เกิดข้อผิดพลาดในการอัปเดตข้อมูลครับ ดูรายละเอียดใน Console");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  if (!isLoaded) {
+    return (
+      <p className="text-center-mt50" style={{ color: "white" }}>
+        กำลังโหลดข้อมูล... ⏳
+      </p>
+    );
+  }
+
   if (!shoe) {
-    return <p className="text-center-mt50">ไม่พบข้อมูลรองเท้า</p>;
+    return (
+      <div className="shoe-detail-container">
+        <button
+          style={{ color: "black" }}
+          className="btn-back-outline"
+          onClick={() => navigate("/")}
+        >
+          &larr; กลับหน้ารายการ
+        </button>
+        <p className="text-center-mt50">ไม่พบข้อมูลรองเท้า</p>
+      </div>
+    );
   }
 
   const handleShare = async () => {
@@ -50,7 +181,6 @@ function ShoeDetail({ shoe, onBack, onDelete, onUpdateShoe }) {
     }
   };
 
-  // --- ฟังก์ชันเปิด/ปิดโหมดแก้ไข ---
   const toggleEditMode = () => {
     if (!isEditingMode) {
       setEditModel(shoe.model);
@@ -81,42 +211,35 @@ function ShoeDetail({ shoe, onBack, onDelete, onUpdateShoe }) {
       alert("กรุณากรอกข้อมูลตัวหนังสือให้ครบทุกช่องครับ");
       return;
     }
-
-    const updatedData = {
-      model: editModel,
-      size: editSize,
-      color: editColor,
-      price: parseFloat(editPrice),
-    };
-
-    if (onUpdateShoe) {
-      onUpdateShoe(shoe.id, updatedData, newCoverFile, newDetailFiles);
-    } else {
-      console.log("ข้อมูลที่รอส่งอัปเดต:", updatedData);
-      console.log("ไฟล์หน้าปกใหม่:", newCoverFile);
-      console.log("ไฟล์รายละเอียดใหม่:", newDetailFiles);
-      alert("รับข้อมูลสำเร็จ! (รอเอา onUpdateShoe มาต่อฝั่ง App.jsx)");
-    }
+    handleUpdateShoe(
+      shoe.id,
+      {
+        model: editModel,
+        size: editSize,
+        color: editColor,
+        price: parseFloat(editPrice),
+      },
+      newCoverFile,
+      newDetailFiles,
+    );
   };
 
   return (
     <div className="shoe-detail-container">
-      {/* ปุ่มกลับ */}
       <button
         style={{ color: "black" }}
         className="btn-back-outline"
-        onClick={onBack}
+        onClick={() => navigate("/")}
       >
         &larr; กลับหน้ารายการ
       </button>
 
       <div className="shoe-detail-content">
-        {/* ✨ สลับโหมดตรงนี้: ถ้าไม่ได้แก้ให้โชว์ ShoeInfoDisplay ถ้าแก้ให้โชว์ ShoeEditForm */}
         {!isEditingMode ? (
           <ShoeInfoDisplay
             shoe={shoe}
             onShare={handleShare}
-            onDelete={onDelete}
+            onDelete={handleDelete}
             onToggleEdit={toggleEditMode}
           />
         ) : (
@@ -133,6 +256,7 @@ function ShoeDetail({ shoe, onBack, onDelete, onUpdateShoe }) {
             onDetailChange={handleDetailChange}
             onSave={handleSaveChanges}
             onCancel={toggleEditMode}
+            isSaving={isSaving}
           />
         )}
       </div>
