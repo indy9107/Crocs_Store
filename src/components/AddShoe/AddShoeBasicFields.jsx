@@ -22,6 +22,9 @@ function AddShoeBasicFields({
           onChange={(e) => setModel(e.target.value)}
           required
         >
+          <option value="" disabled>
+            เลือกรุ่น
+          </option>
           <option value="Classic">Classic</option>
           <option value="Platform">Platform</option>
           <option value="Crush">Crush</option>
@@ -45,6 +48,9 @@ function AddShoeBasicFields({
             value={color}
             required
           >
+            <option value="" disabled>
+              เลือกสี
+            </option>
             <option value="ดำ">ดำ</option>
             <option value="ขาว">ขาว</option>
             <option value="ครีม">ครีม</option>
