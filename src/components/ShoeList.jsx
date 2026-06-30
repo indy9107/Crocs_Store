@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "../supabaseClient";
+import { listShoes, deleteShoes } from "../utils/api";
 import {
   getStoragePathFromPublicUrl,
   removeImagesByPaths,
@@ -24,15 +24,11 @@ function ShoeList() {
 
   const fetchShoes = async () => {
     setIsLoaded(false);
-    const { data, error } = await supabase
-      .from("shoes")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      console.error("เกิดข้อผิดพลาดในการดึงข้อมูล:", error.message);
-    } else if (data) {
+    try {
+      const data = await listShoes();
       setShoes(data);
+    } catch (error) {
+      console.error("เกิดข้อผิดพลาดในการดึงข้อมูล:", error.message);
     }
     setIsLoaded(true);
   };
@@ -90,8 +86,7 @@ function ShoeList() {
         console.warn("ลบรูปบางรูปไม่สำเร็จ:", storageError.message);
       }
 
-      const { error } = await supabase.from("shoes").delete().in("id", ids);
-      if (error) throw error;
+      await deleteShoes(ids);
 
       exitSelectMode();
       await fetchShoes();
@@ -106,7 +101,7 @@ function ShoeList() {
   if (!isLoaded && shoes.length === 0) {
     return (
       <div style={{ textAlign: "center", marginTop: "50px" }}>
-        กำลังเชื่อมต่อกับโกดังสินค้า (Supabase)... ⏳
+        กำลังเชื่อมต่อกับโกดังสินค้า (Cloudflare)... ⏳
       </div>
     );
   }

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "../../supabaseClient";
+import { insertShoe } from "../../utils/api";
 import { uploadImage } from "../../utils/storage";
 import { compressImage, compressImages } from "../../utils/imageCompression";
 import AddShoeBasicFields from "./AddShoeBasicFields";
@@ -47,17 +47,14 @@ function AddShoe() {
       }
 
       setProgressText("กำลังบันทึกข้อมูล...");
-      const { error: insertError } = await supabase.from("shoes").insert([
-        {
-          model,
-          price: parseFloat(price),
-          size,
-          color,
-          image_url: mainImageUrl,
-          detail_images: detailImageUrls,
-        },
-      ]);
-      if (insertError) throw insertError;
+      await insertShoe({
+        model,
+        price: parseFloat(price),
+        size,
+        color,
+        image_url: mainImageUrl,
+        detail_images: detailImageUrls,
+      });
 
       alert("บันทึกข้อมูลและอัปโหลดรูปทั้งหมดสำเร็จแล้ว! 🇰🇷");
       navigate("/");

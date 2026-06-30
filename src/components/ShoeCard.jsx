@@ -22,7 +22,7 @@ function ShoeCard({ shoe, onClick, selectMode = false, isSelected = false }) {
       <div className="card-info">
         <h3>{shoe.model}</h3>
         <p>
-          <b>ID:</b> {shoe.id} | <b>Size:</b> {shoe.size}
+          <b>Size:</b> {shoe.size}
         </p>
         <p>
           <b>สี:</b> {shoe.color}

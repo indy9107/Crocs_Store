@@ -1,0 +1,21 @@
+name = "crocs-store-api"
+main = "src/index.js"
+compatibility_date = "2025-05-01"
+
+# D1 database binding — `env.DB` in the Worker.
+# Create with: npx wrangler d1 create crocs-store
+# Then paste the printed database_id below.
+[[d1_databases]]
+binding = "DB"
+database_name = "crocs-store"
+database_id = "e7fda4c4-031e-425a-af5c-358d1f90d2e1"
+
+# R2 bucket binding — `env.BUCKET` in the Worker.
+# Bucket "shoes" already exists; if not, create with: npx wrangler r2 bucket create shoes
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "shoes"
+
+# Non-secret: the R2 public URL used to build image URLs returned to the browser.
+[vars]
+R2_PUBLIC_URL = "https://pub-4e2f48285c36425e968582b97a0e4ecc.r2.dev/"

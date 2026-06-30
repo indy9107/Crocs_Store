@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { supabase } from "../../supabaseClient";
+import { getShoe, updateShoe, deleteShoes } from "../../utils/api";
 import {
+  fetchImageBlob,
   getStoragePathFromPublicUrl,
   removeImagesByPaths,
   uploadImage,
@@ -37,12 +38,7 @@ function ShoeDetail() {
   const fetchShoe = async () => {
     setIsLoaded(false);
     try {
-      const { data, error } = await supabase
-        .from("shoes")
-        .select("*")
-        .eq("id", id)
-        .single();
-      if (error) throw error;
+      const data = await getShoe(id);
       setShoe(data);
     } catch (error) {
       console.error("ดึงข้อมูลรองเท้าไม่สำเร็จ:", error);
@@ -65,8 +61,7 @@ function ShoeDetail() {
       ];
       await removeImagesByPaths(pathsToRemove);
 
-      const { error } = await supabase.from("shoes").delete().eq("id", shoeId);
-      if (error) throw error;
+      await deleteShoes([shoeId]);
       navigate("/");
     } catch (error) {
       console.error("ลบข้อมูลไม่สำเร็จ:", error);
@@ -106,15 +101,11 @@ function ShoeDetail() {
         finalDetailImages = urls;
       }
 
-      const { error: updateError } = await supabase
-        .from("shoes")
-        .update({
-          ...updatedData,
-          image_url: finalImageUrl,
-          detail_images: finalDetailImages,
-        })
-        .eq("id", shoeId);
-      if (updateError) throw updateError;
+      await updateShoe(shoeId, {
+        ...updatedData,
+        image_url: finalImageUrl,
+        detail_images: finalDetailImages,
+      });
 
       alert("อัปเดตข้อมูลและรูปภาพเรียบร้อยแล้ว! 🎉");
       setIsEditingMode(false);
@@ -158,14 +149,14 @@ function ShoeDetail() {
       return;
     }
     try {
-      const filePromises = shoe.detail_images.map(async (imgUrl, index) => {
-        const response = await fetch(imgUrl);
-        const blob = await response.blob();
-        return new File([blob], `${shoe.model}-detail-${index + 1}.jpg`, {
-          type: "image/jpeg",
+      // ดึงรูปผ่าน Worker backend เพื่อหลีกเลี่ยง CORS จาก R2 public URL
+      const blobs = await Promise.all(shoe.detail_images.map(fetchImageBlob));
+      const filesToShare = blobs.map((blob, index) => {
+        const ext = blob.type === "image/png" ? "png" : "jpg";
+        return new File([blob], `${shoe.model}-detail-${index + 1}.${ext}`, {
+          type: blob.type || "image/jpeg",
         });
       });
-      const filesToShare = await Promise.all(filePromises);
       if (navigator.canShare && navigator.canShare({ files: filesToShare })) {
         await navigator.share({ files: filesToShare });
       } else {
